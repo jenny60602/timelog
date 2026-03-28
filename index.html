@@ -256,76 +256,8 @@ textarea:focus{border-color:#999}
 </div>
 
 <script>
-var SEED_DATA = [
-{"id":1001,"date":"2026-03-24","title":"IT資安採購研究","category":"日常行政","tags":["IT資安","採購","設備"],"col":3,"reason":"設備採購評估可交由行政或IT人員處理","mins":20,"outcome":"待追蹤","afterHours":false},
-{"id":1002,"date":"2026-03-24","title":"104解約行政庶務","category":"日常行政","tags":["行政","104","合約","解約"],"col":3,"reason":"合約解約發信屬行政事務可授權助理","mins":25,"outcome":"完成","afterHours":false},
-{"id":1003,"date":"2026-03-24","title":"排徊簡報業務提案","category":"市場戰略與業務開發","tags":["簡報","提案","業務"],"col":2,"reason":"簡報製作可授權但業務方向需本人確認","mins":30,"outcome":"進行中","afterHours":false},
-{"id":1004,"date":"2026-03-24","title":"青聚點專案執行","category":"市場戰略與業務開發","tags":["青聚點","活動","專案執行"],"col":2,"reason":"專案執行可部分授權但進度需本人掌握","mins":60,"outcome":"進行中","afterHours":false},
-{"id":1005,"date":"2026-03-24","title":"Jessica離職HR管理","category":"組織管理與人才經營","tags":["離職","HR","人事","Jessica"],"col":2,"reason":"離職流程需主管判斷但行政追蹤可授權HR","mins":30,"outcome":"進行中","afterHours":false},
-{"id":1006,"date":"2026-03-24","title":"工研院公關訪談","category":"市場戰略與業務開發","tags":["工研院","訪談","公關"],"col":1,"reason":"代表公司接受訪談需本人出席","mins":60,"outcome":"完成","afterHours":false},
-{"id":1007,"date":"2026-03-24","title":"凱基提案簡報製作","category":"市場戰略與業務開發","tags":["凱基","簡報","提案"],"col":1,"reason":"凱基重要客戶提案策略與內容需本人主導","mins":150,"outcome":"進行中","afterHours":false},
-{"id":1008,"date":"2026-03-24","title":"保誠電話溝通","category":"市場戰略與業務開發","tags":["保誠","電話","客戶往來"],"col":2,"reason":"初步回覆可授權但後續商談需本人判斷","mins":10,"outcome":"待追蹤","afterHours":false},
-{"id":1009,"date":"2026-03-24","title":"活動照片檔案歸檔","category":"日常行政","tags":["歸檔","檔案","雲端"],"col":3,"reason":"檔案整理歸檔可完全交辦他人","mins":10,"outcome":"完成","afterHours":false},
-{"id":1010,"date":"2026-03-24","title":"農業處新事業討論","category":"市場戰略與業務開發","tags":["農業處","新事業","政府關係","防災"],"col":1,"reason":"與政府機關高層討論新事業政策屬核心戰略決策","mins":60,"outcome":"待追蹤","afterHours":false},
-{"id":1011,"date":"2026-03-24","title":"KH農業處回饋討論","category":"市場戰略與業務開發","tags":["農業處","KH","新事業","內部討論"],"col":1,"reason":"延續農業處長會議即時決策討論需本人參與","mins":40,"outcome":"待追蹤","afterHours":false},
-{"id":1012,"date":"2026-03-24","title":"行政庶務簽文處理","category":"日常行政","tags":["行政","庶務","簽文"],"col":3,"reason":"簽文件等行政庶務應交辦助理","mins":30,"outcome":"完成","afterHours":false},
-{"id":1013,"date":"2026-03-24","title":"自動販賣機潛在合作","category":"產品策略與供應鏈整合","tags":["自動販賣機","潛在合作","廠商"],"col":2,"reason":"初步接觸可授權業務同仁但方向需本人定調","mins":20,"outcome":"待追蹤","afterHours":false},
-{"id":1014,"date":"2026-03-24","title":"晚餐休息","category":"日常行政","tags":["吃飯","休息"],"col":3,"reason":"個人用餐時間","mins":60,"outcome":"完成","afterHours":true},
-{"id":1015,"date":"2026-03-24","title":"家務與休閒","category":"日常行政","tags":["家務","休閒","個人時間"],"col":3,"reason":"個人生活時間","mins":80,"outcome":"完成","afterHours":true},
-{"id":1016,"date":"2026-03-24","title":"訪談合作影響力評估","category":"市場戰略與業務開發","tags":["訪談","合作","影響力","朋友請託"],"col":2,"reason":"外部人脈維繫可部分授權但需本人判斷是否投入","mins":30,"outcome":"待追蹤","afterHours":true},
-{"id":2001,"date":"2026-03-25","title":"跨域案減碳計算準備","category":"產品策略與供應鏈整合","tags":["減碳","跨域","簡報準備","春禾"],"col":1,"reason":"涉及專案核心技術內容與提案方向需本人掌握","mins":88,"outcome":"完成","afterHours":false},
-{"id":2002,"date":"2026-03-25","title":"捷運交通移動","category":"日常行政","tags":["交通","捷運","移動"],"col":3,"reason":"交通時間記錄用","mins":20,"outcome":"完成","afterHours":false},
-{"id":2003,"date":"2026-03-25","title":"春禾跨域案開會","category":"市場戰略與業務開發","tags":["春禾","跨域","客戶會議","實體會議"],"col":1,"reason":"代表公司與客戶開會屬核心業務推進","mins":60,"outcome":"待追蹤","afterHours":false},
-{"id":2004,"date":"2026-03-25","title":"凱基簡報緊急修改","category":"市場戰略與業務開發","tags":["凱基","簡報","提案","修改"],"col":1,"reason":"提案內容涉及定價與策略判斷非本人無法確認","mins":130,"outcome":"完成","afterHours":false},
-{"id":2005,"date":"2026-03-25","title":"交通往凱基","category":"日常行政","tags":["交通","移動","凱基"],"col":3,"reason":"交通時間記錄用","mins":20,"outcome":"完成","afterHours":false},
-{"id":2006,"date":"2026-03-25","title":"蛙趣討論","category":"市場戰略與業務開發","tags":["蛙趣","合作討論"],"col":2,"reason":"合作洽談可部分授權但方向需本人定調","mins":20,"outcome":"待追蹤","afterHours":false},
-{"id":2007,"date":"2026-03-25","title":"凱基會議簡報準備","category":"市場戰略與業務開發","tags":["凱基","簡報","準備"],"col":1,"reason":"會議前最後確認需本人執行","mins":15,"outcome":"完成","afterHours":false},
-{"id":2008,"date":"2026-03-25","title":"凱基年度七方會議","category":"市場戰略與業務開發","tags":["凱基","年度會議","多方協作","實體會議"],"col":1,"reason":"多方關鍵會議代表公司立場只有本人能出席","mins":65,"outcome":"待追蹤","afterHours":false},
-{"id":2009,"date":"2026-03-25","title":"凱銀會議","category":"市場戰略與業務開發","tags":["凱銀","客戶會議","金融","實體會議"],"col":1,"reason":"金融客戶正式會議需本人主導","mins":80,"outcome":"待追蹤","afterHours":false},
-{"id":2010,"date":"2026-03-25","title":"回大安交通","category":"日常行政","tags":["交通","移動"],"col":3,"reason":"交通時間記錄用","mins":30,"outcome":"完成","afterHours":false},
-{"id":2011,"date":"2026-03-25","title":"會議後續聯繫進度確認","category":"組織管理與人才經營","tags":["後續追蹤","專案進度","聯繫協調"],"col":2,"reason":"細項聯繫與進度確認可授權助理本人掌握整體即可","mins":80,"outcome":"完成","afterHours":false},
-{"id":2012,"date":"2026-03-25","title":"自動販賣機討論取消","category":"產品策略與供應鏈整合","tags":["廠商","自動販賣機","取消"],"col":3,"reason":"取消通知與重新約時間可交由助理處理","mins":0,"outcome":"失敗/放棄","afterHours":false},
-{"id":3001,"date":"2026-03-26","title":"交通通勤移動","category":"日常行政","tags":["交通","通勤","移動"],"col":3,"reason":"通勤時間記錄用","mins":100,"outcome":"完成","afterHours":false},
-{"id":3002,"date":"2026-03-26","title":"每日工作確認回覆","category":"日常行政","tags":["行政","mail","回訊息","確認"],"col":3,"reason":"日常訊息回覆可授權助理篩選","mins":20,"outcome":"完成","afterHours":false},
-{"id":3003,"date":"2026-03-26","title":"超商檢驗規範確認","category":"產品策略與供應鏈整合","tags":["超商","檢驗","規範","供應鏈"],"col":2,"reason":"規範判斷需本人確認傳達給檢驗公司可授權","mins":0,"outcome":"完成","afterHours":false},
-{"id":3004,"date":"2026-03-26","title":"春禾週會","category":"市場戰略與業務開發","tags":["春禾","週會","能源業務","三小"],"col":1,"reason":"了解春禾業務全貌布局三小協作需本人親自參與","mins":70,"outcome":"完成","afterHours":false},
-{"id":3005,"date":"2026-03-26","title":"Jessica交接業務會議","category":"組織管理與人才經營","tags":["Jessica","交接","潔如","緯襦","業務會議"],"col":1,"reason":"人員交接安排與任務分配需本人主導決策","mins":15,"outcome":"進行中","afterHours":false},
-{"id":3006,"date":"2026-03-26","title":"建興儲存員工好田提案","category":"市場戰略與業務開發","tags":["建興儲存","員工好田","提案","業務"],"col":1,"reason":"新客戶提案策略需本人定調","mins":15,"outcome":"待追蹤","afterHours":false},
-{"id":3007,"date":"2026-03-26","title":"青聚點蹲點生任務討論","category":"市場戰略與業務開發","tags":["青聚點","政府計劃","蹲點生","任務規劃"],"col":2,"reason":"執行任務規劃可部分授權但方向需本人確認","mins":0,"outcome":"待追蹤","afterHours":false},
-{"id":3008,"date":"2026-03-26","title":"地方創生基金會小聚","category":"市場戰略與業務開發","tags":["地方創生","玉山銀行","公關","合作資源"],"col":1,"reason":"高層人脈連結與資源開發需本人親自出席","mins":200,"outcome":"待追蹤","afterHours":false},
-{"id":3009,"date":"2026-03-26","title":"KH電話獨董人選討論","category":"組織管理與人才經營","tags":["KH","董事長","獨董","嚴老師"],"col":1,"reason":"獨董人選屬公司治理核心決策只有本人能處理","mins":30,"outcome":"待追蹤","afterHours":false},
-{"id":3010,"date":"2026-03-26","title":"華山場地確認規劃","category":"市場戰略與業務開發","tags":["華山","場勘","台日交流","感謝祭","活動"],"col":2,"reason":"場地確認電話溝通可授權活動策略需本人定調","mins":30,"outcome":"待追蹤","afterHours":false},
-{"id":3011,"date":"2026-03-26","title":"等高鐵","category":"日常行政","tags":["交通","等車","高鐵"],"col":3,"reason":"等待交通時間記錄用","mins":41,"outcome":"完成","afterHours":false},
-{"id":3012,"date":"2026-03-26","title":"高鐵移動同步辦公","category":"日常行政","tags":["高鐵","交通","移動","同步辦公"],"col":3,"reason":"交通時間記錄用","mins":89,"outcome":"完成","afterHours":false},
-{"id":3013,"date":"2026-03-26","title":"Easyflow採購系統申請","category":"日常行政","tags":["採購","電腦","Easyflow","睿禾","行政"],"col":3,"reason":"系統帳號申請屬行政事務應交辦他人","mins":0,"outcome":"完成","afterHours":false},
-{"id":3014,"date":"2026-03-26","title":"等交通到店舖","category":"日常行政","tags":["交通","等車","移動"],"col":3,"reason":"交通等待時間記錄用","mins":80,"outcome":"完成","afterHours":false},
-{"id":3015,"date":"2026-03-26","title":"永續放蜂線上說明會","category":"市場戰略與業務開發","tags":["永續放蜂","線上說明會","產品","蜜蜂"],"col":1,"reason":"代表公司參與永續產品線說明會需本人出席","mins":105,"outcome":"完成","afterHours":true},
-{"id":3016,"date":"2026-03-26","title":"食通信蜜攝影討論","category":"產品策略與供應鏈整合","tags":["食通信","蜜","攝影師","老鷹家","刊物"],"col":1,"reason":"產品刊物攝影方向與成果確認需本人判斷","mins":55,"outcome":"待追蹤","afterHours":true},
-{"id":4001,"date":"2026-03-27","title":"高鐵交通移動","category":"日常行政","tags":["交通","高鐵","移動"],"col":3,"reason":"交通時間記錄用","mins":110,"outcome":"完成","afterHours":false},
-{"id":4002,"date":"2026-03-27","title":"輕軌步行交通","category":"日常行政","tags":["交通","輕軌","步行","移動"],"col":3,"reason":"交通時間記錄用","mins":42,"outcome":"完成","afterHours":false},
-{"id":4003,"date":"2026-03-27","title":"薪資與團保確認","category":"組織管理與人才經營","tags":["薪資","團保","保險","HR"],"col":2,"reason":"保險資料更新可授權HR執行但薪資確認需本人審核","mins":30,"outcome":"完成","afterHours":false},
-{"id":4004,"date":"2026-03-27","title":"三陽石虎合作止損","category":"市場戰略與業務開發","tags":["三陽工業","石虎","合作","止損","轉介"],"col":1,"reason":"合作方向評估與果斷止損轉介屬戰略判斷只有本人能決定","mins":30,"outcome":"失敗/放棄","afterHours":false},
-{"id":4005,"date":"2026-03-27","title":"石虎協會轉介討論","category":"市場戰略與業務開發","tags":["石虎","建勳","緯襦","轉介","協調"],"col":1,"reason":"轉介決策與內部方向確認需本人主導","mins":30,"outcome":"完成","afterHours":false},
-{"id":4006,"date":"2026-03-27","title":"凱基人壽延伸合作","category":"市場戰略與業務開發","tags":["凱基","人壽","合作","延伸"],"col":1,"reason":"重要金融客戶合作延伸討論需本人親自參與","mins":50,"outcome":"待追蹤","afterHours":false},
-{"id":4007,"date":"2026-03-27","title":"TMF達盟回饋與記錄","category":"市場戰略與業務開發","tags":["TMF","達盟","工作坊","會議記錄","回饋單"],"col":2,"reason":"回饋單修改與記錄發送可授權助理內容方向需本人確認","mins":40,"outcome":"完成","afterHours":false},
-{"id":4008,"date":"2026-03-27","title":"午餐與步行","category":"日常行政","tags":["吃飯","步行","休息"],"col":3,"reason":"個人用餐與移動時間","mins":45,"outcome":"完成","afterHours":false},
-{"id":4009,"date":"2026-03-27","title":"凱基地方創生工作坊","category":"市場戰略與業務開發","tags":["凱基","地方創生","工作坊","ESG","Google計畫","IKEA"],"col":1,"reason":"代表公司參與關鍵客戶工作坊並當場做多項戰略決策","mins":255,"outcome":"完成","afterHours":false},
-{"id":4010,"date":"2026-03-27","title":"新光三越辦公收信","category":"日常行政","tags":["辦公","永續教科書","新光三越"],"col":3,"reason":"零散辦公與通知確認記錄用","mins":50,"outcome":"完成","afterHours":false},
-{"id":4011,"date":"2026-03-27","title":"晚餐與交通返程","category":"日常行政","tags":["吃飯","交通","返程"],"col":3,"reason":"個人用餐與返程交通","mins":85,"outcome":"完成","afterHours":true},
-{"id":4012,"date":"2026-03-27","title":"青聚點活動改期處理","category":"市場戰略與業務開發","tags":["青聚點","政府案","活動改期"],"col":2,"reason":"活動改期協調可授權PM執行但決策需本人確認","mins":0,"outcome":"完成","afterHours":true},
-{"id":4013,"date":"2026-03-27","title":"Jessica離職IT帳號刪除","category":"組織管理與人才經營","tags":["Jessica","離職","IT","Google帳號"],"col":3,"reason":"系統帳號刪除屬IT行政事務應完全交辦","mins":60,"outcome":"完成","afterHours":true},
-{"id":4014,"date":"2026-03-27","title":"移蜂行程確認","category":"產品策略與供應鏈整合","tags":["移蜂","台南","供應鏈","永續放蜂"],"col":2,"reason":"移蜂行程確認可授權相關人員但時程需本人知悉","mins":30,"outcome":"完成","afterHours":true}
-];
-
 var DB=[];
-try{
-  var stored=localStorage.getItem('tlog_v1');
-  DB=stored?JSON.parse(stored):SEED_DATA.slice();
-  if(!DB.length) DB=SEED_DATA.slice();
-}catch(e){ DB=SEED_DATA.slice(); }
-if(!localStorage.getItem('tlog_v1')||JSON.parse(localStorage.getItem('tlog_v1')||'[]').length===0){
-  DB=SEED_DATA.slice();save();
-}
+try{ DB=JSON.parse(localStorage.getItem('tlog_v1')||'[]'); }catch(e){ DB=[]; }
 var dragging=null;
 var CAT_CLS={'市場戰略與業務開發':'ta','產品策略與供應鏈整合':'tb','組織管理與人才經營':'tc'};
 function save(){try{localStorage.setItem('tlog_v1',JSON.stringify(DB));}catch(e){alert('儲存失敗');}}
