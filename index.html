@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>每日時間分配記錄</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f7f6f3;color:#1a1a1a;font-size:14px;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid #e5e4e0;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.logo{font-size:15px;font-weight:600}
+.logo span{font-weight:400;color:#888;margin-left:6px;font-size:13px}
+.nav{display:flex;gap:4px}
+.navbtn{padding:6px 14px;border:none;background:transparent;color:#888;font-size:13px;cursor:pointer;border-radius:6px}
+.navbtn:hover{background:#f0efe9;color:#1a1a1a}
+.navbtn.on{background:#1a1a1a;color:#fff}
+.main{max-width:960px;margin:0 auto;padding:24px 20px}
+.date-row{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.date-row label{font-size:12px;color:#888;font-weight:500;letter-spacing:0.05em;text-transform:uppercase}
+input[type=date]{border:1px solid #e5e4e0;border-radius:6px;background:#fff;color:#1a1a1a;font-size:13px;padding:6px 10px;outline:none}
+input[type=date]:focus{border-color:#aaa}
+.section-label{font-size:11px;font-weight:600;color:#888;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px}
+textarea{width:100%;border:1px solid #e5e4e0;border-radius:10px;background:#fff;color:#1a1a1a;font-size:14px;line-height:1.7;padding:14px 16px;resize:vertical;outline:none;font-family:inherit}
+textarea:focus{border-color:#999}
+.btn-row{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border:1px solid #d5d4d0;border-radius:7px;background:#fff;color:#1a1a1a;font-size:13px;cursor:pointer;font-family:inherit}
+.btn:hover{background:#f0efe9;border-color:#bbb}
+.btn.primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.btn.primary:hover{background:#333}
+.msg{font-size:12px;color:#888;margin-left:4px}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:12px;padding:22px;width:92%;max-width:620px;display:flex;flex-direction:column;gap:12px}
+.modal-title{font-size:15px;font-weight:600}
+.modal-hint{font-size:12px;color:#888;line-height:1.6}
+.modal textarea{min-height:160px;font-size:12px;font-family:'Courier New',monospace;background:#f7f6f3;border-color:#e5e4e0}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.import-box{background:#fff;border:1px solid #e5e4e0;border-radius:10px;padding:14px 16px;margin-top:14px}
+.import-hint{font-size:12px;color:#999;margin-bottom:8px;line-height:1.6}
+.import-box textarea{font-family:'Courier New',monospace;font-size:12px;min-height:70px;background:#f9f9f7}
+.col-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+@media(max-width:640px){.col-grid{grid-template-columns:1fr}}
+.col-box{border-radius:10px;overflow:hidden;border:1px solid #e5e4e0;background:#fff}
+.col-head{padding:12px 14px}
+.c1h{background:#e8f1fb;border-bottom:1px solid #c4d9f0}
+.c2h{background:#e2f5ee;border-bottom:1px solid #a8dfc7}
+.c3h{background:#f1efea;border-bottom:1px solid #d5d3ce}
+.col-title{font-size:13px;font-weight:600}
+.c1h .col-title{color:#0b3d82}
+.c2h .col-title{color:#074d38}
+.c3h .col-title{color:#3d3c39}
+.col-sub{font-size:11px;margin-top:3px;opacity:0.85}
+.c1h .col-sub{color:#1255aa}
+.c2h .col-sub{color:#0e6648}
+.c3h .col-sub{color:#666}
+.col-body{min-height:90px;padding:8px}
+.pending-zone{margin-top:12px;border:1.5px dashed #d5d4d0;border-radius:10px;padding:10px;background:#fafaf8}
+.item-card{background:#f7f6f3;border:1px solid #e8e7e3;border-radius:8px;padding:10px 12px;margin-bottom:7px;cursor:grab}
+.item-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.07)}
+.item-card:active{cursor:grabbing;opacity:0.75}
+.in-col .item-card{background:#fff}
+.item-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px}
+.item-title{font-size:13px;font-weight:600;color:#1a1a1a;line-height:1.4;flex:1}
+.item-reason{font-size:11px;color:#999;margin-bottom:6px;line-height:1.5}
+.tags-row{display:flex;flex-wrap:wrap;gap:3px}
+.tag{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid}
+.ta{background:#e8f1fb;color:#0b3d82;border-color:#c4d9f0}
+.tb{background:#e2f5ee;color:#074d38;border-color:#a8dfc7}
+.tc{background:#f1efea;color:#3d3c39;border-color:#d5d3ce}
+.td{background:#f0efe9;color:#666;border-color:#dddcd8}
+.del{background:none;border:none;cursor:pointer;font-size:18px;line-height:1;color:#bbb;padding:0;flex-shrink:0}
+.del:hover{color:#555}
+.empty-hint{font-size:12px;color:#bbb;padding:12px 4px;text-align:center}
+.pane{display:none}
+.pane.on{display:block}
+.log-date-hd{font-size:12px;font-weight:600;color:#888;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid #eee}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:#fff;border:1px solid #e5e4e0;border-radius:10px;padding:16px;text-align:center}
+.stat-n{font-size:28px;font-weight:600}
+.s1{color:#1255aa}.s2{color:#0e6648}.s3{color:#666}
+.stat-l{font-size:11px;color:#999;margin-top:4px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bar-lbl{font-size:12px;color:#666;width:140px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-bg{flex:1;height:7px;background:#f0efe9;border-radius:4px;overflow:hidden}
+.bar-fill{height:7px;border-radius:4px;background:#888}
+.bar-n{font-size:12px;color:#aaa;width:22px;text-align:right}
+.export-row{display:flex;gap:8px;margin-bottom:16px}
+</style>
+</head>
+<body>
+
+<div class="modal-bg" id="modalBg" onclick="bgClick(event)">
+  <div class="modal">
+    <div class="modal-title">複製以下指令，貼到 Claude 對話</div>
+    <div class="modal-hint">點「全選複製」或手動點入文字框後按 Ctrl+A → Ctrl+C（Mac: Cmd+A → Cmd+C），再貼到 Claude 取得分析結果。</div>
+    <textarea id="promptOut" readonly onclick="this.select()"></textarea>
+    <div class="modal-btns">
+      <button class="btn primary" onclick="execCopy()">全選複製</button>
+      <button class="btn" onclick="closeModal()">關閉</button>
+    </div>
+    <div style="font-size:12px;color:#aaa;text-align:right" id="copyFeedback"></div>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="logo">每日時間分配 <span>Time Log</span></div>
+  <div class="nav">
+    <button class="navbtn on" onclick="showPane('entry',this)">記錄</button>
+    <button class="navbtn" onclick="showPane('log',this)">總覽</button>
+    <button class="navbtn" onclick="showPane('stats',this)">統計</button>
+    <button class="navbtn" onclick="backupData()" title="備份所有資料為 JSON 檔">備份</button>
+    <label class="navbtn" style="cursor:pointer" title="從備份 JSON 還原資料">還原<input type="file" accept=".json" onchange="restoreData(event)" style="display:none"></label>
+    <button class="navbtn" onclick="toggleApiKeyPanel()" title="設定 API Key">⚙ API Key</button>
+  </div>
+</div>
+<div id="apiKeyPanel" style="display:none;background:#f7f6f3;border-bottom:1px solid #e5e4e0;padding:10px 24px">
+  <div style="max-width:960px;margin:0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span style="font-size:12px;color:#888">Anthropic API Key</span>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-..." style="flex:1;min-width:200px;max-width:400px;border:1px solid #e5e4e0;border-radius:6px;padding:6px 10px;font-size:13px;background:#fff;color:#1a1a1a;outline:none">
+    <button class="btn" onclick="saveApiKey()">儲存</button>
+    <button class="btn" onclick="clearApiKey()">清除</button>
+    <span id="apiKeyStatus" style="font-size:12px;color:#888"></span>
+    <span style="font-size:11px;color:#bbb">Key 只存在本機 localStorage，不會上傳任何地方</span>
+  </div>
+</div>
+
+<div class="main">
+<div class="date-row">
+  <label>日期</label>
+  <input type="date" id="dateIn">
+</div>
+
+<div id="pane-entry" class="pane on">
+  <div class="section-label">今日流水帳</div>
+  <textarea id="rawText" rows="6" placeholder="隨意記下今天做了什麼，例如：
+早上和越南客戶視訊確認報價，整理供應商比較表，跟 Amy 做季度面談，回覆幾封雜事 email...
+
+寫完後按「產生分析指令」，複製貼到 Claude，再把回傳的 JSON 貼回下方匯入。"></textarea>
+  <div class="btn-row">
+    <button class="btn primary" onclick="showPrompt()">產生分析指令 →</button>
+    <button class="btn" onclick="doManual()">手動新增</button>
+    <span class="msg" id="mainMsg"></span>
+  </div>
+
+  <div class="import-box">
+    <div class="section-label">匯入 Claude 分析結果</div>
+    <div class="import-hint">將 Claude 回傳的 JSON 貼到這裡，按「匯入」即可自動產生分類卡片。</div>
+    <textarea id="importJson" rows="4" placeholder='[{"title":"凱基提案簡報","category":"市場戰略與業務開發","tags":["提案","簡報"],"col":1,"reason":"需本人主導"}]'></textarea>
+    <div class="btn-row" style="margin-top:8px">
+      <button class="btn primary" onclick="doImport()">匯入</button>
+      <span class="msg" id="importMsg"></span>
+    </div>
+  </div>
+
+  <div style="margin-top:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="section-label" style="margin:0">今日分類看板</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="dateLabel" style="font-size:12px;color:#aaa"></span>
+        <button class="btn" style="font-size:12px;padding:4px 10px;color:#c0392b;border-color:#e8c5c0" onclick="clearDay()">清除當日全部</button>
+      </div>
+    </div>
+    <div class="col-grid">
+      <div class="col-box" id="zone-1" ondragover="onOver(event,this)" ondragleave="onLeave(this)" ondrop="onDrop(event,1)">
+        <div class="col-head c1h"><div class="col-title">欄一：核心任務</div><div class="col-sub">只有我能做 · 公司關鍵優先</div></div>
+        <div class="col-body in-col" id="body-1"></div>
+      </div>
+      <div class="col-box" id="zone-2" ondragover="onOver(event,this)" ondragleave="onLeave(this)" ondrop="onDrop(event,2)">
+        <div class="col-head c2h"><div class="col-title">欄二：重要可授權</div><div class="col-sub">重要 · 可部分委派他人</div></div>
+        <div class="col-body in-col" id="body-2"></div>
+      </div>
+      <div class="col-box" id="zone-3" ondragover="onOver(event,this)" ondragleave="onLeave(this)" ondrop="onDrop(event,3)">
+        <div class="col-head c3h"><div class="col-title">欄三：交辦事項</div><div class="col-sub">較不重要 · 應交給他人</div></div>
+        <div class="col-body in-col" id="body-3"></div>
+      </div>
+    </div>
+    <div class="pending-zone" id="zone-0" ondragover="onOver(event,this)" ondragleave="onLeave(this)" ondrop="onDrop(event,0)">
+      <div class="section-label">待分類</div>
+      <div id="body-0"></div>
+    </div>
+  </div>
+</div>
+
+<div id="pane-log" class="pane">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;gap:6px">
+      <button class="btn" id="rv-tab-daily" onclick="switchReview('daily',this)" style="background:#1a1a1a;color:#fff;border-color:#1a1a1a">每日摘要</button>
+      <button class="btn" id="rv-tab-followup" onclick="switchReview('followup',this)">待追蹤清單</button>
+      <button class="btn" id="rv-tab-wip" onclick="switchReview('wip',this)">進行中項目</button>
+      <button class="btn" id="rv-tab-compare" onclick="switchReview('compare',this)">日期對比</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn" onclick="exportCSV()">匯出 CSV</button>
+      <span class="msg" id="exportMsg"></span>
+    </div>
+  </div>
+
+  <div id="rv-daily">
+    <div id="dailySummaryList"></div>
+  </div>
+
+  <div id="rv-followup" style="display:none">
+    <div style="font-size:12px;color:#888;margin-bottom:12px">所有標記為「待追蹤」的項目，跨日彙整</div>
+    <div id="followupList"></div>
+  </div>
+
+  <div id="rv-wip" style="display:none">
+    <div style="font-size:12px;color:#888;margin-bottom:12px">所有標記為「進行中」的項目，跨日彙整</div>
+    <div id="wipList"></div>
+  </div>
+
+  <div id="rv-compare" style="display:none">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:6px">
+        <label style="font-size:12px;color:#888">日期 A</label>
+        <select id="compareA" onchange="renderCompare()" style="border:1px solid #e5e4e0;border-radius:6px;background:#fff;color:#1a1a1a;font-size:13px;padding:5px 8px;outline:none"></select>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <label style="font-size:12px;color:#888">日期 B</label>
+        <select id="compareB" onchange="renderCompare()" style="border:1px solid #e5e4e0;border-radius:6px;background:#fff;color:#1a1a1a;font-size:13px;padding:5px 8px;outline:none"></select>
+      </div>
+    </div>
+    <div id="compareContent"></div>
+  </div>
+</div>
+
+<div id="pane-stats" class="pane">
+
+  <div class="section-label">欄位比例（累計小時）</div>
+  <div class="stat-grid" style="margin-top:8px">
+    <div class="stat-card"><div class="stat-n s1" id="sn1">0h</div><div class="stat-l">欄一：核心任務</div></div>
+    <div class="stat-card"><div class="stat-n s2" id="sn2">0h</div><div class="stat-l">欄二：重要可授權</div></div>
+    <div class="stat-card"><div class="stat-n s3" id="sn3">0h</div><div class="stat-l">欄三：交辦事項</div></div>
+  </div>
+  <div id="colRatio" style="margin-bottom:24px"></div>
+
+  <div class="section-label">加班檢視 — 18:00 後的工作</div>
+  <div id="overtimeSummary" style="margin-top:10px;margin-bottom:24px"></div>
+
+  <div class="section-label">失敗／放棄彙總</div>
+  <div id="failSummary" style="margin-top:10px;margin-bottom:24px"></div>
+
+  <div class="section-label">客戶面 — 哪個客戶最花你的時間</div>
+  <div id="clientBars" style="margin-top:10px;margin-bottom:24px"></div>
+
+  <div class="section-label">工作類型面 — 時間花在哪種工作上</div>
+  <div id="workTypeBars" style="margin-top:10px;margin-bottom:24px"></div>
+
+  <div class="section-label">大分類分布</div>
+  <div id="catBars" style="margin-top:10px;margin-bottom:24px"></div>
+
+  <div class="section-label">近14天欄位趨勢</div>
+  <div id="trendChart" style="margin-top:10px"></div>
+
+</div>
+</div>
+
+<script>
+var SEED_DATA = [
+{"id":1001,"date":"2026-03-24","title":"IT資安採購研究","category":"日常行政","tags":["IT資安","採購","設備"],"col":3,"reason":"設備採購評估可交由行政或IT人員處理","mins":20,"outcome":"待追蹤","afterHours":false},
+{"id":1002,"date":"2026-03-24","title":"104解約行政庶務","category":"日常行政","tags":["行政","104","合約","解約"],"col":3,"reason":"合約解約發信屬行政事務可授權助理","mins":25,"outcome":"完成","afterHours":false},
+{"id":1003,"date":"2026-03-24","title":"排徊簡報業務提案","category":"市場戰略與業務開發","tags":["簡報","提案","業務"],"col":2,"reason":"簡報製作可授權但業務方向需本人確認","mins":30,"outcome":"進行中","afterHours":false},
+{"id":1004,"date":"2026-03-24","title":"青聚點專案執行","category":"市場戰略與業務開發","tags":["青聚點","活動","專案執行"],"col":2,"reason":"專案執行可部分授權但進度需本人掌握","mins":60,"outcome":"進行中","afterHours":false},
+{"id":1005,"date":"2026-03-24","title":"Jessica離職HR管理","category":"組織管理與人才經營","tags":["離職","HR","人事","Jessica"],"col":2,"reason":"離職流程需主管判斷但行政追蹤可授權HR","mins":30,"outcome":"進行中","afterHours":false},
+{"id":1006,"date":"2026-03-24","title":"工研院公關訪談","category":"市場戰略與業務開發","tags":["工研院","訪談","公關"],"col":1,"reason":"代表公司接受訪談需本人出席","mins":60,"outcome":"完成","afterHours":false},
+{"id":1007,"date":"2026-03-24","title":"凱基提案簡報製作","category":"市場戰略與業務開發","tags":["凱基","簡報","提案"],"col":1,"reason":"凱基重要客戶提案策略與內容需本人主導","mins":150,"outcome":"進行中","afterHours":false},
+{"id":1008,"date":"2026-03-24","title":"保誠電話溝通","category":"市場戰略與業務開發","tags":["保誠","電話","客戶往來"],"col":2,"reason":"初步回覆可授權但後續商談需本人判斷","mins":10,"outcome":"待追蹤","afterHours":false},
+{"id":1009,"date":"2026-03-24","title":"活動照片檔案歸檔","category":"日常行政","tags":["歸檔","檔案","雲端"],"col":3,"reason":"檔案整理歸檔可完全交辦他人","mins":10,"outcome":"完成","afterHours":false},
+{"id":1010,"date":"2026-03-24","title":"農業處新事業討論","category":"市場戰略與業務開發","tags":["農業處","新事業","政府關係","防災"],"col":1,"reason":"與政府機關高層討論新事業政策屬核心戰略決策","mins":60,"outcome":"待追蹤","afterHours":false},
+{"id":1011,"date":"2026-03-24","title":"KH農業處回饋討論","category":"市場戰略與業務開發","tags":["農業處","KH","新事業","內部討論"],"col":1,"reason":"延續農業處長會議即時決策討論需本人參與","mins":40,"outcome":"待追蹤","afterHours":false},
+{"id":1012,"date":"2026-03-24","title":"行政庶務簽文處理","category":"日常行政","tags":["行政","庶務","簽文"],"col":3,"reason":"簽文件等行政庶務應交辦助理","mins":30,"outcome":"完成","afterHours":false},
+{"id":1013,"date":"2026-03-24","title":"自動販賣機潛在合作","category":"產品策略與供應鏈整合","tags":["自動販賣機","潛在合作","廠商"],"col":2,"reason":"初步接觸可授權業務同仁但方向需本人定調","mins":20,"outcome":"待追蹤","afterHours":false},
+{"id":1014,"date":"2026-03-24","title":"晚餐休息","category":"日常行政","tags":["吃飯","休息"],"col":3,"reason":"個人用餐時間","mins":60,"outcome":"完成","afterHours":true},
+{"id":1015,"date":"2026-03-24","title":"家務與休閒","category":"日常行政","tags":["家務","休閒","個人時間"],"col":3,"reason":"個人生活時間","mins":80,"outcome":"完成","afterHours":true},
+{"id":1016,"date":"2026-03-24","title":"訪談合作影響力評估","category":"市場戰略與業務開發","tags":["訪談","合作","影響力","朋友請託"],"col":2,"reason":"外部人脈維繫可部分授權但需本人判斷是否投入","mins":30,"outcome":"待追蹤","afterHours":true},
+{"id":2001,"date":"2026-03-25","title":"跨域案減碳計算準備","category":"產品策略與供應鏈整合","tags":["減碳","跨域","簡報準備","春禾"],"col":1,"reason":"涉及專案核心技術內容與提案方向需本人掌握","mins":88,"outcome":"完成","afterHours":false},
+{"id":2002,"date":"2026-03-25","title":"捷運交通移動","category":"日常行政","tags":["交通","捷運","移動"],"col":3,"reason":"交通時間記錄用","mins":20,"outcome":"完成","afterHours":false},
+{"id":2003,"date":"2026-03-25","title":"春禾跨域案開會","category":"市場戰略與業務開發","tags":["春禾","跨域","客戶會議","實體會議"],"col":1,"reason":"代表公司與客戶開會屬核心業務推進","mins":60,"outcome":"待追蹤","afterHours":false},
+{"id":2004,"date":"2026-03-25","title":"凱基簡報緊急修改","category":"市場戰略與業務開發","tags":["凱基","簡報","提案","修改"],"col":1,"reason":"提案內容涉及定價與策略判斷非本人無法確認","mins":130,"outcome":"完成","afterHours":false},
+{"id":2005,"date":"2026-03-25","title":"交通往凱基","category":"日常行政","tags":["交通","移動","凱基"],"col":3,"reason":"交通時間記錄用","mins":20,"outcome":"完成","afterHours":false},
+{"id":2006,"date":"2026-03-25","title":"蛙趣討論","category":"市場戰略與業務開發","tags":["蛙趣","合作討論"],"col":2,"reason":"合作洽談可部分授權但方向需本人定調","mins":20,"outcome":"待追蹤","afterHours":false},
+{"id":2007,"date":"2026-03-25","title":"凱基會議簡報準備","category":"市場戰略與業務開發","tags":["凱基","簡報","準備"],"col":1,"reason":"會議前最後確認需本人執行","mins":15,"outcome":"完成","afterHours":false},
+{"id":2008,"date":"2026-03-25","title":"凱基年度七方會議","category":"市場戰略與業務開發","tags":["凱基","年度會議","多方協作","實體會議"],"col":1,"reason":"多方關鍵會議代表公司立場只有本人能出席","mins":65,"outcome":"待追蹤","afterHours":false},
+{"id":2009,"date":"2026-03-25","title":"凱銀會議","category":"市場戰略與業務開發","tags":["凱銀","客戶會議","金融","實體會議"],"col":1,"reason":"金融客戶正式會議需本人主導","mins":80,"outcome":"待追蹤","afterHours":false},
+{"id":2010,"date":"2026-03-25","title":"回大安交通","category":"日常行政","tags":["交通","移動"],"col":3,"reason":"交通時間記錄用","mins":30,"outcome":"完成","afterHours":false},
+{"id":2011,"date":"2026-03-25","title":"會議後續聯繫進度確認","category":"組織管理與人才經營","tags":["後續追蹤","專案進度","聯繫協調"],"col":2,"reason":"細項聯繫與進度確認可授權助理本人掌握整體即可","mins":80,"outcome":"完成","afterHours":false},
+{"id":2012,"date":"2026-03-25","title":"自動販賣機討論取消","category":"產品策略與供應鏈整合","tags":["廠商","自動販賣機","取消"],"col":3,"reason":"取消通知與重新約時間可交由助理處理","mins":0,"outcome":"失敗/放棄","afterHours":false},
+{"id":3001,"date":"2026-03-26","title":"交通通勤移動","category":"日常行政","tags":["交通","通勤","移動"],"col":3,"reason":"通勤時間記錄用","mins":100,"outcome":"完成","afterHours":false},
+{"id":3002,"date":"2026-03-26","title":"每日工作確認回覆","category":"日常行政","tags":["行政","mail","回訊息","確認"],"col":3,"reason":"日常訊息回覆可授權助理篩選","mins":20,"outcome":"完成","afterHours":false},
+{"id":3003,"date":"2026-03-26","title":"超商檢驗規範確認","category":"產品策略與供應鏈整合","tags":["超商","檢驗","規範","供應鏈"],"col":2,"reason":"規範判斷需本人確認傳達給檢驗公司可授權","mins":0,"outcome":"完成","afterHours":false},
+{"id":3004,"date":"2026-03-26","title":"春禾週會","category":"市場戰略與業務開發","tags":["春禾","週會","能源業務","三小"],"col":1,"reason":"了解春禾業務全貌布局三小協作需本人親自參與","mins":70,"outcome":"完成","afterHours":false},
+{"id":3005,"date":"2026-03-26","title":"Jessica交接業務會議","category":"組織管理與人才經營","tags":["Jessica","交接","潔如","緯襦","業務會議"],"col":1,"reason":"人員交接安排與任務分配需本人主導決策","mins":15,"outcome":"進行中","afterHours":false},
+{"id":3006,"date":"2026-03-26","title":"建興儲存員工好田提案","category":"市場戰略與業務開發","tags":["建興儲存","員工好田","提案","業務"],"col":1,"reason":"新客戶提案策略需本人定調","mins":15,"outcome":"待追蹤","afterHours":false},
+{"id":3007,"date":"2026-03-26","title":"青聚點蹲點生任務討論","category":"市場戰略與業務開發","tags":["青聚點","政府計劃","蹲點生","任務規劃"],"col":2,"reason":"執行任務規劃可部分授權但方向需本人確認","mins":0,"outcome":"待追蹤","afterHours":false},
+{"id":3008,"date":"2026-03-26","title":"地方創生基金會小聚","category":"市場戰略與業務開發","tags":["地方創生","玉山銀行","公關","合作資源"],"col":1,"reason":"高層人脈連結與資源開發需本人親自出席","mins":200,"outcome":"待追蹤","afterHours":false},
+{"id":3009,"date":"2026-03-26","title":"KH電話獨董人選討論","category":"組織管理與人才經營","tags":["KH","董事長","獨董","嚴老師"],"col":1,"reason":"獨董人選屬公司治理核心決策只有本人能處理","mins":30,"outcome":"待追蹤","afterHours":false},
+{"id":3010,"date":"2026-03-26","title":"華山場地確認規劃","category":"市場戰略與業務開發","tags":["華山","場勘","台日交流","感謝祭","活動"],"col":2,"reason":"場地確認電話溝通可授權活動策略需本人定調","mins":30,"outcome":"待追蹤","afterHours":false},
+{"id":3011,"date":"2026-03-26","title":"等高鐵","category":"日常行政","tags":["交通","等車","高鐵"],"col":3,"reason":"等待交通時間記錄用","mins":41,"outcome":"完成","afterHours":false},
+{"id":3012,"date":"2026-03-26","title":"高鐵移動同步辦公","category":"日常行政","tags":["高鐵","交通","移動","同步辦公"],"col":3,"reason":"交通時間記錄用","mins":89,"outcome":"完成","afterHours":false},
+{"id":3013,"date":"2026-03-26","title":"Easyflow採購系統申請","category":"日常行政","tags":["採購","電腦","Easyflow","睿禾","行政"],"col":3,"reason":"系統帳號申請屬行政事務應交辦他人","mins":0,"outcome":"完成","afterHours":false},
+{"id":3014,"date":"2026-03-26","title":"等交通到店舖","category":"日常行政","tags":["交通","等車","移動"],"col":3,"reason":"交通等待時間記錄用","mins":80,"outcome":"完成","afterHours":false},
+{"id":3015,"date":"2026-03-26","title":"永續放蜂線上說明會","category":"市場戰略與業務開發","tags":["永續放蜂","線上說明會","產品","蜜蜂"],"col":1,"reason":"代表公司參與永續產品線說明會需本人出席","mins":105,"outcome":"完成","afterHours":true},
+{"id":3016,"date":"2026-03-26","title":"食通信蜜攝影討論","category":"產品策略與供應鏈整合","tags":["食通信","蜜","攝影師","老鷹家","刊物"],"col":1,"reason":"產品刊物攝影方向與成果確認需本人判斷","mins":55,"outcome":"待追蹤","afterHours":true},
+{"id":4001,"date":"2026-03-27","title":"高鐵交通移動","category":"日常行政","tags":["交通","高鐵","移動"],"col":3,"reason":"交通時間記錄用","mins":110,"outcome":"完成","afterHours":false},
+{"id":4002,"date":"2026-03-27","title":"輕軌步行交通","category":"日常行政","tags":["交通","輕軌","步行","移動"],"col":3,"reason":"交通時間記錄用","mins":42,"outcome":"完成","afterHours":false},
+{"id":4003,"date":"2026-03-27","title":"薪資與團保確認","category":"組織管理與人才經營","tags":["薪資","團保","保險","HR"],"col":2,"reason":"保險資料更新可授權HR執行但薪資確認需本人審核","mins":30,"outcome":"完成","afterHours":false},
+{"id":4004,"date":"2026-03-27","title":"三陽石虎合作止損","category":"市場戰略與業務開發","tags":["三陽工業","石虎","合作","止損","轉介"],"col":1,"reason":"合作方向評估與果斷止損轉介屬戰略判斷只有本人能決定","mins":30,"outcome":"失敗/放棄","afterHours":false},
+{"id":4005,"date":"2026-03-27","title":"石虎協會轉介討論","category":"市場戰略與業務開發","tags":["石虎","建勳","緯襦","轉介","協調"],"col":1,"reason":"轉介決策與內部方向確認需本人主導","mins":30,"outcome":"完成","afterHours":false},
+{"id":4006,"date":"2026-03-27","title":"凱基人壽延伸合作","category":"市場戰略與業務開發","tags":["凱基","人壽","合作","延伸"],"col":1,"reason":"重要金融客戶合作延伸討論需本人親自參與","mins":50,"outcome":"待追蹤","afterHours":false},
+{"id":4007,"date":"2026-03-27","title":"TMF達盟回饋與記錄","category":"市場戰略與業務開發","tags":["TMF","達盟","工作坊","會議記錄","回饋單"],"col":2,"reason":"回饋單修改與記錄發送可授權助理內容方向需本人確認","mins":40,"outcome":"完成","afterHours":false},
+{"id":4008,"date":"2026-03-27","title":"午餐與步行","category":"日常行政","tags":["吃飯","步行","休息"],"col":3,"reason":"個人用餐與移動時間","mins":45,"outcome":"完成","afterHours":false},
+{"id":4009,"date":"2026-03-27","title":"凱基地方創生工作坊","category":"市場戰略與業務開發","tags":["凱基","地方創生","工作坊","ESG","Google計畫","IKEA"],"col":1,"reason":"代表公司參與關鍵客戶工作坊並當場做多項戰略決策","mins":255,"outcome":"完成","afterHours":false},
+{"id":4010,"date":"2026-03-27","title":"新光三越辦公收信","category":"日常行政","tags":["辦公","永續教科書","新光三越"],"col":3,"reason":"零散辦公與通知確認記錄用","mins":50,"outcome":"完成","afterHours":false},
+{"id":4011,"date":"2026-03-27","title":"晚餐與交通返程","category":"日常行政","tags":["吃飯","交通","返程"],"col":3,"reason":"個人用餐與返程交通","mins":85,"outcome":"完成","afterHours":true},
+{"id":4012,"date":"2026-03-27","title":"青聚點活動改期處理","category":"市場戰略與業務開發","tags":["青聚點","政府案","活動改期"],"col":2,"reason":"活動改期協調可授權PM執行但決策需本人確認","mins":0,"outcome":"完成","afterHours":true},
+{"id":4013,"date":"2026-03-27","title":"Jessica離職IT帳號刪除","category":"組織管理與人才經營","tags":["Jessica","離職","IT","Google帳號"],"col":3,"reason":"系統帳號刪除屬IT行政事務應完全交辦","mins":60,"outcome":"完成","afterHours":true},
+{"id":4014,"date":"2026-03-27","title":"移蜂行程確認","category":"產品策略與供應鏈整合","tags":["移蜂","台南","供應鏈","永續放蜂"],"col":2,"reason":"移蜂行程確認可授權相關人員但時程需本人知悉","mins":30,"outcome":"完成","afterHours":true}
+];
+
+var DB=[];
+try{
+  var stored=localStorage.getItem('tlog_v1');
+  DB=stored?JSON.parse(stored):SEED_DATA.slice();
+  if(!DB.length) DB=SEED_DATA.slice();
+}catch(e){ DB=SEED_DATA.slice(); }
+if(!localStorage.getItem('tlog_v1')||JSON.parse(localStorage.getItem('tlog_v1')||'[]').length===0){
+  DB=SEED_DATA.slice();save();
+}
+var dragging=null;
+var CAT_CLS={'市場戰略與業務開發':'ta','產品策略與供應鏈整合':'tb','組織管理與人才經營':'tc'};
+function save(){try{localStorage.setItem('tlog_v1',JSON.stringify(DB));}catch(e){alert('儲存失敗');}}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+document.getElementById('dateIn').value=todayStr();
+setDateLabel();
+function setDateLabel(){document.getElementById('dateLabel').textContent=document.getElementById('dateIn').value;}
+document.getElementById('dateIn').addEventListener('change',function(){setDateLabel();renderCols();});
+
+function showPane(name,el){
+  document.querySelectorAll('.pane').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.navbtn').forEach(function(b){b.classList.remove('on');});
+  document.getElementById('pane-'+name).classList.add('on');
+  el.classList.add('on');
+  if(name==='log')renderLog();
+  if(name==='stats')renderStats();
+}
+
+var OUTCOME_STYLE={
+  '完成':       'background:#e2f5ee;color:#074d38;border-color:#a8dfc7',
+  '進行中':     'background:#e8f1fb;color:#0b3d82;border-color:#c4d9f0',
+  '待追蹤':     'background:#fff7e6;color:#7a4d00;border-color:#f5d08a',
+  '失敗/放棄':  'background:#fde8e8;color:#7a0000;border-color:#f5a8a8'
+};
+
+function makeCard(e){
+  var cc=CAT_CLS[e.category]||'td';
+  var catTag=e.category?'<span class="tag '+cc+'">'+e.category+'</span>':'';
+  var subTags=(e.tags||[]).map(function(t){return'<span class="tag td">'+t+'</span>';}).join('');
+  var mins=e.mins||0;
+  var minDisplay=mins
+    ?'<span style="font-size:11px;color:#888;margin-left:6px;font-weight:400">'+mins+' 分鐘</span>'
+    :'<span style="font-size:10px;color:#d87a00;background:#fff7e6;border:1px solid #f5d08a;border-radius:4px;padding:1px 5px;margin-left:6px;font-weight:400">補填時間</span>';
+  var outcome=e.outcome||'進行中';
+  var ost=OUTCOME_STYLE[outcome]||OUTCOME_STYLE['進行中'];
+  var outcomeSelect='<select onclick="event.stopPropagation()" onchange="setOutcome(\''+e.id+'\',this.value)" style="font-size:11px;padding:2px 4px;border-radius:4px;border:1px solid #e5e4e0;background:#fff;color:#1a1a1a;outline:none;cursor:pointer">'
+    +['進行中','完成','待追蹤','失敗/放棄'].map(function(o){
+      return'<option value="'+o+'"'+(o===outcome?' selected':'')+'>'+o+'</option>';
+    }).join('')+'</select>';
+  var afterBadge=e.afterHours?'<span style="font-size:10px;color:#c05c00;background:#fff3e6;border:1px solid #f5c98a;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:400">夜間</span>':'';
+  return'<div class="item-card" draggable="true" data-id="'+e.id+'" ondragstart="dragStart(event,this)" style="'+(outcome==='失敗/放棄'?'border-left:3px solid #e87070;':outcome==='完成'?'border-left:3px solid #5dcaa5;':'')+'">'+
+    '<div class="item-head">'+
+      '<div style="flex:1;min-width:0"><div class="item-title" style="display:flex;align-items:center;flex-wrap:wrap;gap:2px">'+e.title+minDisplay+afterBadge+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:4px;flex-shrink:0;margin-left:6px">'+
+        outcomeSelect+
+        '<input type="number" min="0" max="999" placeholder="分鐘" value="'+(mins||'')+'" style="width:52px;font-size:12px;padding:3px 6px;border:1px solid #e5e4e0;border-radius:5px;background:#fff;color:#1a1a1a;outline:none" onclick="event.stopPropagation()" onchange="setMins(\''+e.id+'\',this.value)">'+
+        '<button class="del" onclick="event.stopPropagation();delEntry(\''+e.id+'\')">×</button>'+
+      '</div>'+
+    '</div>'+
+    (e.reason?'<div class="item-reason">'+e.reason+'</div>':'')+
+    '<div class="tags-row">'+catTag+subTags+'</div></div>';
+}
+
+function setOutcome(id,val){
+  var e=DB.find(function(x){return String(x.id)===String(id);});
+  if(e){e.outcome=val;save();renderCols();}
+}
+
+function setMins(id,val){
+  var e=DB.find(function(x){return String(x.id)===String(id);});
+  if(e){e.mins=parseInt(val)||0;save();}
+}
+
+function backupData(){
+  if(!DB.length){alert('目前沒有資料可備份');return;}
+  var blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='timelog_backup_'+todayStr()+'.json';
+  a.click();
+}
+
+function restoreData(ev){
+  var file=ev.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=JSON.parse(e.target.result);
+      if(!Array.isArray(data))throw new Error();
+      DB=data;save();renderCols();
+      alert('還原成功！共 '+DB.length+' 筆資料');
+    }catch(err){alert('還原失敗，請確認檔案格式正確');}
+  };
+  reader.readAsText(file);
+  ev.target.value='';
+}
+
+function renderCols(){
+  var date=document.getElementById('dateIn').value;
+  var items=DB.filter(function(e){return e.date===date;});
+  [0,1,2,3].forEach(function(col){
+    var el=document.getElementById('body-'+col);if(!el)return;
+    var list=items.filter(function(e){return e.col===col;});
+    el.innerHTML=list.length?list.map(makeCard).join(''):'<div class="empty-hint">'+(col===0?'無待分類項目':'空')+'</div>';
+  });
+}
+
+function dragStart(ev,el){dragging=el.dataset.id;ev.dataTransfer.effectAllowed='move';}
+function onOver(ev,zone){ev.preventDefault();zone.style.outline='2px solid #888';zone.style.outlineOffset='2px';}
+function onLeave(zone){zone.style.outline='';zone.style.outlineOffset='';}
+function onDrop(ev,col){
+  ev.preventDefault();var z=document.getElementById('zone-'+col);if(z)onLeave(z);
+  if(!dragging)return;
+  var e=DB.find(function(x){return String(x.id)===String(dragging);});
+  if(e){e.col=col;save();renderCols();}
+  dragging=null;
+}
+function delEntry(id){
+  DB=DB.filter(function(e){return String(e.id)!==String(id);});
+  save();renderCols();
+}
+
+function clearDay(){
+  var date=document.getElementById('dateIn').value;
+  var count=DB.filter(function(e){return e.date===date;}).length;
+  if(!count){showMsg('mainMsg','這天沒有資料');return;}
+  DB=DB.filter(function(e){return e.date!==date;});
+  save();renderCols();showMsg('mainMsg','已清除 '+date+' 共 '+count+' 張卡片，可重新匯入');
+}
+
+function showPrompt(){
+  var text=document.getElementById('rawText').value.trim();
+  if(!text){showMsg('mainMsg','請先輸入流水帳內容');return;}
+  var p='請分析以下工作流水帳，拆解成活動項目並以 JSON 格式回傳（不加 markdown backtick）。\n\n每項包含：\n- title（10字內）\n- category（市場戰略與業務開發／產品策略與供應鏈整合／組織管理與人才經營／日常行政）\n- tags（陣列）\n- col（1=只有我能做的核心任務、2=重要可授權、3=應交辦他人）\n- reason（一句話說明）\n- mins（整數分鐘數：若流水帳有標明時間區間如「09:00-11:00」請直接計算分鐘數填入；若沒有時間資訊則填 0）\n- outcome（結果狀態，只能填：「進行中」「完成」「失敗/放棄」「待追蹤」。若提案被拒/止損/取消填「失敗/放棄」；完成結案填「完成」；需跟進填「待追蹤」；其他填「進行中」）\n- afterHours（布林值 true/false：若該活動的開始時間在 18:00 或之後，或流水帳明確標示為晚上進行，填 true；否則填 false）\n\n流水帳：\n\n'+text;
+  document.getElementById('promptOut').value=p;
+  document.getElementById('copyFeedback').textContent='';
+  document.getElementById('modalBg').classList.add('show');
+  setTimeout(function(){document.getElementById('promptOut').select();},120);
+}
+
+function execCopy(){
+  var ta=document.getElementById('promptOut');
+  ta.select();ta.setSelectionRange(0,99999);
+  var ok=false;
+  try{ok=document.execCommand('copy');}catch(e){}
+  if(ok){
+    document.getElementById('copyFeedback').textContent='已複製！';
+    setTimeout(closeModal,800);
+  } else {
+    document.getElementById('copyFeedback').textContent='請手動全選後複製（Ctrl+A → Ctrl+C）';
+  }
+}
+
+function closeModal(){document.getElementById('modalBg').classList.remove('show');}
+function bgClick(ev){if(ev.target===document.getElementById('modalBg'))closeModal();}
+
+function doManual(){
+  var text=document.getElementById('rawText').value.trim();if(!text)return;
+  var date=document.getElementById('dateIn').value;
+  DB.push({id:Date.now(),date:date,title:text.slice(0,30),category:'未分類',tags:[],col:0,reason:''});
+  save();renderCols();document.getElementById('rawText').value='';showMsg('mainMsg','已手動新增');
+}
+
+function doImport(){
+  var raw=document.getElementById('importJson').value.trim();
+  if(!raw){showMsg('importMsg','請貼上 JSON');return;}
+  try{
+    var clean=raw.replace(/```json|```/g,'').trim();
+    var items=JSON.parse(clean);if(!Array.isArray(items))throw new Error();
+    var date=document.getElementById('dateIn').value;
+    var noMins=0;
+    items.forEach(function(item){
+      var m=parseInt(item.mins)||0;
+      if(!m)noMins++;
+      DB.push({id:Date.now()+Math.random(),date:date,title:item.title||'未命名',category:item.category||'日常行政',tags:item.tags||[],col:item.col||0,reason:item.reason||'',mins:m,outcome:item.outcome||'進行中',afterHours:item.afterHours===true});
+    });
+    save();renderCols();document.getElementById('importJson').value='';
+    var msg='已匯入 '+items.length+' 個項目';
+    if(noMins)msg+='，其中 '+noMins+' 項無時間，請在卡片補填分鐘數';
+    showMsg('importMsg',msg);
+  }catch(e){showMsg('importMsg','JSON 格式有誤，請重新貼上');}
+}
+
+function showMsg(id,txt){
+  var el=document.getElementById(id);if(!el)return;
+  el.textContent=txt;setTimeout(function(){el.textContent='';},4000);
+}
+
+function switchReview(name, el){
+  ['daily','followup','wip','compare'].forEach(function(n){
+    document.getElementById('rv-'+n).style.display = n===name?'':'none';
+    var btn=document.getElementById('rv-tab-'+n);
+    if(btn){btn.style.background='';btn.style.color='';btn.style.borderColor='';}
+  });
+  if(el){el.style.background='#1a1a1a';el.style.color='#fff';el.style.borderColor='#1a1a1a';}
+  if(name==='daily') renderDailySummary();
+  if(name==='followup') renderOutcomeList('待追蹤','followupList');
+  if(name==='wip') renderOutcomeList('進行中','wipList');
+  if(name==='compare') renderCompare();
+}
+
+function renderLog(){
+  renderDailySummary();
+}
+
+function renderDailySummary(){
+  var el=document.getElementById('dailySummaryList');
+  if(!DB.length){el.innerHTML='<div style="color:#aaa;padding:20px 0;font-size:13px">尚無紀錄</div>';return;}
+  var allDates=[...new Set(DB.map(function(e){return e.date;}))].sort(function(a,b){return b.localeCompare(a);});
+  el.innerHTML=allDates.map(function(date){
+    var items=DB.filter(function(e){return e.date===date;});
+    var totalMins=items.reduce(function(s,e){return s+(e.mins||0);},0);
+    var c=[0,0,0];
+    items.forEach(function(e){if(e.col>=1&&e.col<=3)c[e.col-1]+=(e.mins||0);});
+    var colTotal=c[0]+c[1]+c[2]||1;
+    var p1=Math.round(c[0]/colTotal*100),p2=Math.round(c[1]/colTotal*100),p3=100-p1-p2;
+    var followup=items.filter(function(e){return e.outcome==='待追蹤';}).length;
+    var fail=items.filter(function(e){return e.outcome==='失敗/放棄';}).length;
+    var ot=items.filter(function(e){return e.afterHours;}).reduce(function(s,e){return s+(e.mins||0);},0);
+    var safeDate=date.replace(/-/g,'');
+    return'<div id="card-'+safeDate+'" style="background:#fff;border:1px solid #e5e4e0;border-radius:10px;padding:14px 16px;margin-bottom:12px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+        +'<div style="font-size:14px;font-weight:600">'+date+'</div>'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+          +'<div style="font-size:13px;color:#888">'+toHr(totalMins)+'</div>'
+          +'<button onclick="getAISuggestion(\''+date+'\')" id="ai-btn-'+safeDate+'" style="font-size:11px;padding:3px 10px;border:1px solid #d5d4d0;border-radius:6px;background:#fff;cursor:pointer;color:#555">AI 建議</button>'
+        +'</div>'
+      +'</div>'
+      +'<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin-bottom:8px">'
+        +'<div style="width:'+p1+'%;background:#c4d9f0"></div>'
+        +'<div style="width:'+p2+'%;background:#a8dfc7"></div>'
+        +'<div style="width:'+p3+'%;background:#d5d3ce"></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
+        +'<span style="font-size:11px;color:#888"><span style="display:inline-block;width:8px;height:8px;background:#c4d9f0;border-radius:2px;margin-right:3px;vertical-align:middle"></span>核心 '+p1+'%</span>'
+        +'<span style="font-size:11px;color:#888"><span style="display:inline-block;width:8px;height:8px;background:#a8dfc7;border-radius:2px;margin-right:3px;vertical-align:middle"></span>授權 '+p2+'%</span>'
+        +'<span style="font-size:11px;color:#888"><span style="display:inline-block;width:8px;height:8px;background:#d5d3ce;border-radius:2px;margin-right:3px;vertical-align:middle"></span>交辦 '+p3+'%</span>'
+        +(followup?'<span style="font-size:11px;color:#d87a00;background:#fff7e6;padding:1px 7px;border-radius:20px;border:1px solid #f5d08a">待追蹤 '+followup+'</span>':'')
+        +(fail?'<span style="font-size:11px;color:#c0392b;background:#fff0f0;padding:1px 7px;border-radius:20px;border:1px solid #f5c5c5">失敗 '+fail+'</span>':'')
+        +(ot?'<span style="font-size:11px;color:#c05c00;background:#fff3e6;padding:1px 7px;border-radius:20px;border:1px solid #f5c98a">加班 '+toHr(ot)+'</span>':'')
+      +'</div>'
+      +'<div id="ai-result-'+safeDate+'" style="margin-top:0"></div>'
+    +'</div>';
+  }).join('');
+}
+
+function toggleApiKeyPanel(){
+  var p=document.getElementById('apiKeyPanel');
+  p.style.display=p.style.display==='none'?'block':'none';
+  if(p.style.display==='block'){
+    var k=localStorage.getItem('anthropic_key')||'';
+    document.getElementById('apiKeyInput').value=k;
+    document.getElementById('apiKeyStatus').textContent=k?'已設定':'未設定';
+  }
+}
+function saveApiKey(){
+  var k=document.getElementById('apiKeyInput').value.trim();
+  if(!k){document.getElementById('apiKeyStatus').textContent='請輸入 Key';return;}
+  localStorage.setItem('anthropic_key',k);
+  document.getElementById('apiKeyStatus').textContent='已儲存';
+  setTimeout(function(){document.getElementById('apiKeyPanel').style.display='none';},800);
+}
+function clearApiKey(){
+  localStorage.removeItem('anthropic_key');
+  document.getElementById('apiKeyInput').value='';
+  document.getElementById('apiKeyStatus').textContent='已清除';
+}
+
+async function getAISuggestion(date){
+  var apiKey=localStorage.getItem('anthropic_key')||'';
+  var safeDate=date.replace(/-/g,'');
+  var btn=document.getElementById('ai-btn-'+safeDate);
+  var resultEl=document.getElementById('ai-result-'+safeDate);
+  if(!btn||!resultEl)return;
+
+  if(!apiKey){
+    resultEl.innerHTML='<div style="margin-top:10px;padding:10px 12px;background:#fff7e6;border:1px solid #f5d08a;border-radius:8px;font-size:12px;color:#7a4d00">'
+      +'請先點右上角「⚙ API Key」設定你的 Anthropic API Key，才能使用 AI 建議功能。</div>';
+    return;
+  }
+
+  btn.textContent='分析中...';btn.disabled=true;
+  resultEl.innerHTML='<div style="margin-top:12px;padding:10px 12px;background:#f7f6f3;border-radius:8px;font-size:12px;color:#aaa">AI 分析中，請稍候...</div>';
+
+  var items=DB.filter(function(e){return e.date===date;});
+  var totalMins=items.reduce(function(s,e){return s+(e.mins||0);},0);
+  var c=[0,0,0];
+  items.forEach(function(e){if(e.col>=1&&e.col<=3)c[e.col-1]+=(e.mins||0);});
+  var ot=items.filter(function(e){return e.afterHours;}).reduce(function(s,e){return s+(e.mins||0);},0);
+  var failItems=items.filter(function(e){return e.outcome==='失敗/放棄';});
+  var followItems=items.filter(function(e){return e.outcome==='待追蹤';});
+  var col2After=items.filter(function(e){return e.col===2&&e.afterHours;});
+  var col3After=items.filter(function(e){return e.col===3&&e.afterHours;});
+
+  var summary='日期：'+date+'\n'
+    +'總工作時間：'+toHr(totalMins)+'\n'
+    +'欄一（核心任務）：'+toHr(c[0])+' ／ 欄二（可授權）：'+toHr(c[1])+' ／ 欄三（應交辦）：'+toHr(c[2])+'\n'
+    +'18:00後加班時間：'+toHr(ot)+'\n'
+    +(failItems.length?'失敗/放棄項目：'+failItems.map(function(e){return e.title+'('+toHr(e.mins||0)+')';}).join('、')+'\n':'')
+    +(followItems.length?'待追蹤項目：'+followItems.map(function(e){return e.title;}).join('、')+'\n':'')
+    +(col2After.length?'加班中可授權項目：'+col2After.map(function(e){return e.title;}).join('、')+'\n':'')
+    +(col3After.length?'加班中應交辦項目：'+col3After.map(function(e){return e.title;}).join('、')+'\n':'')
+    +'所有工作項目：\n'
+    +items.filter(function(e){return e.category!=='日常行政'||e.col<3;}).map(function(e){
+      return'- '+e.title+'（'+['待分類','欄一','欄二','欄三'][e.col]+'，'+e.category+'，'+(e.mins||0)+'分鐘，'+e.outcome+(e.afterHours?'，夜間':'')+')';
+    }).join('\n');
+
+  try{
+    var resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:600,
+        messages:[{role:'user',content:'你是一位時間管理顧問。以下是某位同時管理多個組織的業務領導人某天的工作紀錄摘要。請給出3-5點具體、可執行的時間優化建議，條列式，每點一句話，直接切入重點，不要廢話。重點關注：加班項目是否可前移或授權、欄二/欄三項目是否可進一步委派、失敗投入是否可提早止損、待追蹤項目的跟進效率。\n\n'+summary}]
+      })
+    });
+    var data=await resp.json();
+    if(data.error){throw new Error(data.error.message);}
+    var text=data.content.filter(function(c){return c.type==='text';}).map(function(c){return c.text;}).join('');
+    var lines=text.split('\n').filter(function(l){return l.trim();});
+    resultEl.innerHTML='<div style="margin-top:12px;padding:12px 14px;background:#f0f7ff;border:1px solid #c4d9f0;border-radius:8px">'
+      +'<div style="font-size:11px;font-weight:600;color:#0b3d82;margin-bottom:8px;letter-spacing:0.04em">AI 時間優化建議</div>'
+      +lines.map(function(l){
+        return'<div style="font-size:12px;color:#1a1a1a;line-height:1.8;padding:4px 0;border-bottom:1px solid #e8f1fb">'+l+'</div>';
+      }).join('')
+      +'</div>';
+    btn.textContent='重新分析';btn.disabled=false;
+  }catch(err){
+    resultEl.innerHTML='<div style="margin-top:10px;padding:10px;background:#fff0f0;border:1px solid #f5c5c5;border-radius:8px;font-size:12px;color:#c0392b">分析失敗：'+err.message+'<br>請確認 API Key 正確且有足夠額度。</div>';
+    btn.textContent='AI 建議';btn.disabled=false;
+  }
+}
+
+function renderOutcomeList(outcome, elId){
+  var el=document.getElementById(elId);
+  var items=DB.filter(function(e){return e.outcome===outcome;}).sort(function(a,b){return b.date.localeCompare(a.date);});
+  if(!items.length){el.innerHTML='<div style="color:#aaa;font-size:13px;padding:12px 0">目前沒有「'+outcome+'」的項目</div>';return;}
+  var byDate={};
+  items.forEach(function(e){if(!byDate[e.date])byDate[e.date]=[];byDate[e.date].push(e);});
+  var bgColor=outcome==='待追蹤'?'#fff7e6':'#f0f7ff';
+  var borderColor=outcome==='待追蹤'?'#f5d08a':'#c4d9f0';
+  el.innerHTML=Object.entries(byDate).sort(function(a,b){return b[0].localeCompare(a[0]);}).map(function(pair){
+    var date=pair[0],dayItems=pair[1];
+    return'<div style="margin-bottom:14px">'
+      +'<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #eee">'+date+'</div>'
+      +dayItems.map(function(e){
+        var colLabel=['','欄一','欄二','欄三'][e.col]||'';
+        var colColor=['','#0b3d82','#074d38','#666'][e.col]||'#aaa';
+        return'<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:'+bgColor+';border:1px solid '+borderColor+';border-radius:7px;margin-bottom:5px">'
+          +'<div style="flex:1;font-size:13px;color:#1a1a1a">'+e.title+'</div>'
+          +(colLabel?'<span style="font-size:10px;color:'+colColor+';border:1px solid;border-color:'+colColor+';border-radius:3px;padding:1px 5px;flex-shrink:0">'+colLabel+'</span>':'')
+          +(e.mins?'<span style="font-size:12px;color:#aaa;flex-shrink:0">'+toHr(e.mins)+'</span>':'')
+          +'</div>';
+      }).join('')
+      +'</div>';
+  }).join('');
+}
+
+function renderCompare(){
+  var allDates=[...new Set(DB.map(function(e){return e.date;}))].sort(function(a,b){return b.localeCompare(a);});
+  var selA=document.getElementById('compareA');
+  var selB=document.getElementById('compareB');
+  var curA=selA.value, curB=selB.value;
+  var opts=allDates.map(function(d){return'<option value="'+d+'">'+d+'</option>';}).join('');
+  selA.innerHTML=opts; selB.innerHTML=opts;
+  if(curA&&allDates.indexOf(curA)>=0) selA.value=curA;
+  if(curB&&allDates.indexOf(curB)>=0) selB.value=curB;
+  else if(allDates.length>1) selB.value=allDates[1];
+  var dA=selA.value, dB=selB.value;
+  if(!dA||!dB){document.getElementById('compareContent').innerHTML='';return;}
+  function daySummary(date){
+    var items=DB.filter(function(e){return e.date===date;});
+    var totalMins=items.reduce(function(s,e){return s+(e.mins||0);},0);
+    var c=[0,0,0];
+    items.forEach(function(e){if(e.col>=1&&e.col<=3)c[e.col-1]+=(e.mins||0);});
+    var colTotal=c[0]+c[1]+c[2]||1;
+    var cats={};
+    items.forEach(function(e){cats[e.category]=(cats[e.category]||0)+(e.mins||0);});
+    var ot=items.filter(function(e){return e.afterHours;}).reduce(function(s,e){return s+(e.mins||0);},0);
+    return{items:items,totalMins:totalMins,c:c,colTotal:colTotal,cats:cats,ot:ot};
+  }
+  var sA=daySummary(dA), sB=daySummary(dB);
+  function colBar(c,colTotal){
+    var p1=Math.round(c[0]/colTotal*100),p2=Math.round(c[1]/colTotal*100),p3=100-p1-p2;
+    return'<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin:6px 0">'
+      +'<div style="width:'+p1+'%;background:#c4d9f0"></div>'
+      +'<div style="width:'+p2+'%;background:#a8dfc7"></div>'
+      +'<div style="width:'+p3+'%;background:#d5d3ce"></div>'
+      +'</div>'
+      +'<div style="font-size:11px;color:#888">核心 '+p1+'% · 授權 '+p2+'% · 交辦 '+p3+'%</div>';
+  }
+  var allCats=[...new Set([...Object.keys(sA.cats),...Object.keys(sB.cats)])];
+  var maxCat=Math.max(...allCats.map(function(k){return Math.max(sA.cats[k]||0,sB.cats[k]||0);}),1);
+  document.getElementById('compareContent').innerHTML=
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+      +'<div style="background:#fff;border:1px solid #e5e4e0;border-radius:10px;padding:14px">'
+        +'<div style="font-size:13px;font-weight:600;margin-bottom:8px">'+dA+'</div>'
+        +'<div style="font-size:22px;font-weight:600;color:#1a1a1a">'+toHr(sA.totalMins)+'</div>'
+        +colBar(sA.c,sA.colTotal)
+        +(sA.ot?'<div style="font-size:11px;color:#c05c00;margin-top:6px">加班 '+toHr(sA.ot)+'</div>':'')
+      +'</div>'
+      +'<div style="background:#fff;border:1px solid #e5e4e0;border-radius:10px;padding:14px">'
+        +'<div style="font-size:13px;font-weight:600;margin-bottom:8px">'+dB+'</div>'
+        +'<div style="font-size:22px;font-weight:600;color:#1a1a1a">'+toHr(sB.totalMins)+'</div>'
+        +colBar(sB.c,sB.colTotal)
+        +(sB.ot?'<div style="font-size:11px;color:#c05c00;margin-top:6px">加班 '+toHr(sB.ot)+'</div>':'')
+      +'</div>'
+    +'</div>'
+    +'<div style="margin-top:14px;background:#fff;border:1px solid #e5e4e0;border-radius:10px;padding:14px">'
+      +'<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em">大分類對比</div>'
+      +allCats.map(function(cat){
+        var vA=sA.cats[cat]||0, vB=sB.cats[cat]||0;
+        return'<div style="margin-bottom:10px">'
+          +'<div style="font-size:12px;color:#555;margin-bottom:4px">'+cat+'</div>'
+          +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">'
+            +'<div style="font-size:11px;color:#888;width:60px">'+dA.slice(5)+'</div>'
+            +'<div style="flex:1;height:6px;background:#f0efe9;border-radius:3px;overflow:hidden"><div style="width:'+Math.round(vA/maxCat*100)+'%;height:6px;background:#378ADD;border-radius:3px"></div></div>'
+            +'<div style="font-size:11px;color:#aaa;min-width:36px;text-align:right">'+toHr(vA)+'</div>'
+          +'</div>'
+          +'<div style="display:flex;align-items:center;gap:6px">'
+            +'<div style="font-size:11px;color:#888;width:60px">'+dB.slice(5)+'</div>'
+            +'<div style="flex:1;height:6px;background:#f0efe9;border-radius:3px;overflow:hidden"><div style="width:'+Math.round(vB/maxCat*100)+'%;height:6px;background:#1D9E75;border-radius:3px"></div></div>'
+            +'<div style="font-size:11px;color:#aaa;min-width:36px;text-align:right">'+toHr(vB)+'</div>'
+          +'</div>'
+        +'</div>';
+      }).join('')
+    +'</div>';
+}
+
+var CLIENT_KEYWORDS=['凱基','凱銀','春禾','保誠','蛙趣','工研院','農業處','直銷協會','景文','自動販賣機','觀創會','聖峰'];
+var WORKTYPE_MAP={
+  '實體會議':['開會','會議','七方','年度','洽談','訪談'],
+  '線上會議':['視訊','線上','zoom','meet','teams'],
+  '簡報製作':['簡報','提案','製作','修改','準備'],
+  '電話溝通':['電話','通話','討論','聯繫'],
+  '行政庶務':['行政','庶務','簽文','合約','解約','採購','歸檔','發信'],
+  '移動交通':['交通','捷運','搭車','開車','移動','往'],
+  '研究規劃':['研究','規劃','計算','整理'],
+  '人才管理':['面談','離職','HR','招募','人事','1on1']
+};
+
+function toHr(mins){return(mins/60).toFixed(1)+'h';}
+
+function makeBars(data,maxVal,fillColor,unit){
+  if(!data.length)return'<div style="color:#bbb;font-size:12px;padding:8px 0">資料不足，繼續記錄後顯示</div>';
+  var top=maxVal||1;
+  return data.map(function(pair){
+    var lbl=pair[0],v=pair[1];
+    var pct=Math.round(v/top*100);
+    var disp=unit==='h'?toHr(v):v+'件';
+    return'<div class="bar-row"><div class="bar-lbl" title="'+lbl+'">'+lbl+'</div>'
+      +'<div class="bar-bg"><div class="bar-fill" style="width:'+pct+'%;background:'+fillColor+'"></div></div>'
+      +'<div style="font-size:12px;color:#aaa;min-width:42px;text-align:right">'+disp+'</div></div>';
+  }).join('');
+}
+
+function renderStats(){
+  var hasMins=DB.some(function(e){return e.mins>0;});
+
+  // 加班檢視
+  var otItems=DB.filter(function(e){return e.afterHours===true;});
+  var otMins=otItems.reduce(function(s,e){return s+(e.mins||0);},0);
+  var otByDate={};
+  otItems.forEach(function(e){
+    if(!otByDate[e.date])otByDate[e.date]=[];
+    otByDate[e.date].push(e);
+  });
+  var otEl=document.getElementById('overtimeSummary');
+  if(!otItems.length){
+    otEl.innerHTML='<div style="color:#bbb;font-size:12px;padding:8px 0">目前無記錄到 18:00 後的工作項目</div>';
+  } else {
+    var otDateKeys=Object.keys(otByDate).sort(function(a,b){return b.localeCompare(a);});
+    otEl.innerHTML='<div style="background:#fff8f3;border:1px solid #f5d8b0;border-radius:10px;padding:12px 16px">'
+      +'<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px">'
+      +'<span style="font-size:22px;font-weight:600;color:#c05c00">'+toHr(otMins)+'</span>'
+      +'<span style="font-size:12px;color:#888">共 '+otItems.length+' 項工作在 18:00 後進行</span>'
+      +'</div>'
+      +otDateKeys.map(function(date){
+        var dayItems=otByDate[date];
+        var dayMins=dayItems.reduce(function(s,e){return s+(e.mins||0);},0);
+        return'<div style="margin-bottom:8px">'
+          +'<div style="font-size:11px;font-weight:600;color:#c05c00;margin-bottom:4px;padding-top:8px;border-top:1px solid #f5d8b0">'+date+' · '+toHr(dayMins)+'</div>'
+          +dayItems.map(function(e){
+            var colLabel=['','欄一','欄二','欄三'][e.col]||'';
+            var colColor=['','#0b3d82','#074d38','#666'][e.col]||'#aaa';
+            return'<div style="display:flex;align-items:center;gap:8px;padding:5px 0">'
+              +'<span style="font-size:13px;color:#1a1a1a;flex:1">'+e.title+'</span>'
+              +(colLabel?'<span style="font-size:10px;color:'+colColor+';border:1px solid;border-radius:3px;padding:1px 5px">'+colLabel+'</span>':'')
+              +(e.mins?'<span style="font-size:12px;color:#aaa">'+toHr(e.mins)+'</span>':'')
+              +'</div>';
+          }).join('')
+          +'</div>';
+      }).join('')
+      +'</div>'
+      +'<div style="font-size:12px;color:#888;margin-top:8px">提示：欄二、欄三出現在加班清單，是最優先的授權機會。</div>';
+  }
+
+  // 失敗/放棄彙總
+  var failItems=DB.filter(function(e){return e.outcome==='失敗/放棄';});
+  var failMins=failItems.reduce(function(s,e){return s+(e.mins||0);},0);
+  var failEl=document.getElementById('failSummary');
+  if(!failItems.length){
+    failEl.innerHTML='<div style="color:#bbb;font-size:12px;padding:8px 0">目前無失敗或放棄的項目</div>';
+  } else {
+    failEl.innerHTML='<div style="background:#fff8f8;border:1px solid #f5c5c5;border-radius:10px;padding:12px 16px">'
+      +'<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px">'
+      +'<span style="font-size:22px;font-weight:600;color:#c0392b">'+toHr(failMins)+'</span>'
+      +'<span style="font-size:12px;color:#888">共 '+failItems.length+' 項投入後未成功</span>'
+      +'</div>'
+      +failItems.map(function(e){
+        return'<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #f5e0e0">'
+          +'<span style="font-size:12px;color:#c0392b;flex-shrink:0">'+e.date+'</span>'
+          +'<span style="font-size:13px;color:#1a1a1a;flex:1">'+e.title+'</span>'
+          +(e.mins?'<span style="font-size:12px;color:#aaa">'+toHr(e.mins)+'</span>':'')
+          +'</div>';
+      }).join('')
+      +'</div>';
+  }
+
+  // 欄位累計
+  var cm=[0,0,0];
+  DB.forEach(function(e){if(e.col>=1&&e.col<=3)cm[e.col-1]+=(e.mins||0);});
+  document.getElementById('sn1').textContent=toHr(cm[0]);
+  document.getElementById('sn2').textContent=toHr(cm[1]);
+  document.getElementById('sn3').textContent=toHr(cm[2]);
+
+  // 欄位比例橫條
+  var colTotal=cm[0]+cm[1]+cm[2]||1;
+  var p1=Math.round(cm[0]/colTotal*100),p2=Math.round(cm[1]/colTotal*100),p3=100-p1-p2;
+  document.getElementById('colRatio').innerHTML=
+    '<div style="display:flex;height:10px;border-radius:6px;overflow:hidden;margin-top:8px">'
+    +'<div style="width:'+p1+'%;background:#c4d9f0" title="欄一 '+p1+'%"></div>'
+    +'<div style="width:'+p2+'%;background:#a8dfc7" title="欄二 '+p2+'%"></div>'
+    +'<div style="width:'+p3+'%;background:#d5d3ce" title="欄三 '+p3+'%"></div>'
+    +'</div><div style="display:flex;gap:14px;margin-top:6px">'
+    +'<span style="font-size:11px;color:#888"><span style="display:inline-block;width:8px;height:8px;background:#c4d9f0;border-radius:2px;margin-right:4px;vertical-align:middle"></span>核心 '+p1+'%</span>'
+    +'<span style="font-size:11px;color:#888"><span style="display:inline-block;width:8px;height:8px;background:#a8dfc7;border-radius:2px;margin-right:4px;vertical-align:middle"></span>可授權 '+p2+'%</span>'
+    +'<span style="font-size:11px;color:#888"><span style="display:inline-block;width:8px;height:8px;background:#d5d3ce;border-radius:2px;margin-right:4px;vertical-align:middle"></span>交辦 '+p3+'%</span>'
+    +(hasMins?'':'<span style="font-size:11px;color:#bbb;margin-left:8px">（尚無分鐘數，以件數計）</span>')
+    +'</div>';
+
+  // 客戶面：顯示總時間＋失敗時間
+  var clientsTotal={};var clientsFail={};
+  DB.forEach(function(e){
+    var text=(e.title+' '+(e.tags||[]).join(' '));
+    CLIENT_KEYWORDS.forEach(function(k){
+      if(text.indexOf(k)>=0){
+        var v=hasMins?(e.mins||0):1;
+        clientsTotal[k]=(clientsTotal[k]||0)+v;
+        if(e.outcome==='失敗/放棄') clientsFail[k]=(clientsFail[k]||0)+v;
+      }
+    });
+  });
+  var clientData=Object.entries(clientsTotal).filter(function(p){return p[1]>0;}).sort(function(a,b){return b[1]-a[1];}).slice(0,10);
+  var clientMax=clientData.length?clientData[0][1]:1;
+  var unit=hasMins?'h':'n';
+  if(!clientData.length){
+    document.getElementById('clientBars').innerHTML='<div style="color:#bbb;font-size:12px;padding:8px 0">資料不足，繼續記錄後顯示</div>';
+  } else {
+    document.getElementById('clientBars').innerHTML=clientData.map(function(pair){
+      var k=pair[0],total=pair[1],fail=clientsFail[k]||0;
+      var pct=Math.round(total/clientMax*100);
+      var fpct=Math.round(fail/clientMax*100);
+      var totalDisp=unit==='h'?toHr(total):total+'件';
+      var failDisp=fail?(unit==='h'?' / 失敗 '+toHr(fail):' / 失敗 '+fail+'件'):'';
+      return'<div class="bar-row"><div class="bar-lbl" title="'+k+'">'+k+'</div>'
+        +'<div class="bar-bg" style="position:relative">'
+          +'<div style="position:absolute;left:0;top:0;height:7px;border-radius:4px;background:#378ADD;width:'+pct+'%"></div>'
+          +(fail?'<div style="position:absolute;left:0;top:0;height:7px;border-radius:4px;background:#e87070;width:'+fpct+'%"></div>':'')
+        +'</div>'
+        +'<div style="font-size:12px;color:#aaa;min-width:80px;text-align:right">'+totalDisp+'<span style="color:#e87070">'+failDisp+'</span></div></div>';
+    }).join('')
+    +'<div style="display:flex;gap:12px;margin-top:8px">'
+    +'<span style="font-size:11px;color:#888"><span style="display:inline-block;width:10px;height:7px;background:#378ADD;border-radius:2px;margin-right:4px;vertical-align:middle"></span>總投入</span>'
+    +'<span style="font-size:11px;color:#888"><span style="display:inline-block;width:10px;height:7px;background:#e87070;border-radius:2px;margin-right:4px;vertical-align:middle"></span>失敗/放棄</span>'
+    +'</div>';
+  }
+
+  // 工作類型面
+  var wtypes={};
+  DB.forEach(function(e){
+    var text=(e.title+' '+(e.tags||[]).join(' '));
+    Object.entries(WORKTYPE_MAP).forEach(function(pair){
+      var type=pair[0],kws=pair[1];
+      if(kws.some(function(k){return text.indexOf(k)>=0;}))
+        wtypes[type]=(wtypes[type]||0)+(hasMins?(e.mins||0):1);
+    });
+  });
+  var wtData=Object.entries(wtypes).filter(function(p){return p[1]>0;}).sort(function(a,b){return b[1]-a[1];});
+  var wtMax=wtData.length?wtData[0][1]:1;
+  document.getElementById('workTypeBars').innerHTML=makeBars(wtData,wtMax,'#1D9E75',hasMins?'h':'n');
+
+  // 大分類
+  var cats={};
+  DB.forEach(function(e){cats[e.category]=(cats[e.category]||0)+(hasMins?(e.mins||0):1);});
+  var catData=Object.entries(cats).filter(function(p){return p[1]>0;}).sort(function(a,b){return b[1]-a[1];});
+  var catMax=catData.length?catData[0][1]:1;
+  document.getElementById('catBars').innerHTML=makeBars(catData,catMax,'#888',hasMins?'h':'n');
+
+  // 近14天趨勢（分鐘）
+  var days=[];for(var i=13;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);days.push(d.toISOString().slice(0,10));}
+  var maxMins=1;
+  days.forEach(function(d){
+    var t=DB.filter(function(e){return e.date===d;}).reduce(function(s,e){return s+(e.mins||0);},0);
+    if(t>maxMins)maxMins=t;
+  });
+  var html='<div style="display:flex;gap:4px;align-items:flex-end;height:80px">';
+  days.forEach(function(d){
+    var items=DB.filter(function(e){return e.date===d;});
+    var m1=items.filter(function(e){return e.col===1;}).reduce(function(s,e){return s+(e.mins||0);},0);
+    var m2=items.filter(function(e){return e.col===2;}).reduce(function(s,e){return s+(e.mins||0);},0);
+    var m3=items.filter(function(e){return e.col===3;}).reduce(function(s,e){return s+(e.mins||0);},0);
+    var tot=m1+m2+m3;var sc=tot?60/maxMins:0;
+    var tip=d+' ｜核心:'+toHr(m1)+' 授權:'+toHr(m2)+' 交辦:'+toHr(m3);
+    html+='<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:1px" title="'+tip+'">';
+    if(tot){
+      html+='<div style="width:100%;background:#c4d9f0;border-radius:2px 2px 0 0;height:'+Math.round(m1*sc)+'px"></div>'
+           +'<div style="width:100%;background:#a8dfc7;height:'+Math.round(m2*sc)+'px"></div>'
+           +'<div style="width:100%;background:#d5d3ce;height:'+Math.round(m3*sc)+'px"></div>';
+    } else { html+='<div style="flex:1"></div>'; }
+    html+='<div style="font-size:9px;color:#bbb;margin-top:3px">'+d.slice(5)+'</div></div>';
+  });
+  html+='</div><div style="display:flex;gap:12px;margin-top:8px">'
+    +'<span style="font-size:11px;color:#888"><span style="display:inline-block;width:10px;height:10px;background:#c4d9f0;border-radius:2px;margin-right:4px;vertical-align:middle"></span>核心</span>'
+    +'<span style="font-size:11px;color:#888"><span style="display:inline-block;width:10px;height:10px;background:#a8dfc7;border-radius:2px;margin-right:4px;vertical-align:middle"></span>可授權</span>'
+    +'<span style="font-size:11px;color:#888"><span style="display:inline-block;width:10px;height:10px;background:#d5d3ce;border-radius:2px;margin-right:4px;vertical-align:middle"></span>交辦</span>'
+    +'<span style="font-size:11px;color:#bbb;margin-left:4px">（滑鼠移到長條看詳細）</span></div>';
+  document.getElementById('trendChart').innerHTML=html;
+}
+
+function exportCSV(){
+  if(!DB.length){showMsg('exportMsg','尚無資料');return;}
+  var rows=[['日期','標題','分鐘數','大分類','標籤','欄位','說明']];
+  DB.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).forEach(function(e){
+    rows.push([e.date,e.title,e.mins||'',e.category,(e.tags||[]).join('|'),['待分類','欄一：核心任務','欄二：重要可授權','欄三：交辦事項'][e.col]||e.col,e.reason||'']);
+  });
+  var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='time_log_'+todayStr()+'.csv';a.click();
+  showMsg('exportMsg','已匯出');
+}
+
+renderCols();
+</script>
+</body>
+</html>
